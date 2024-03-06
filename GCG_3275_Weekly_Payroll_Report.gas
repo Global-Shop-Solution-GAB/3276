@@ -1,0 +1,736 @@
+Program.Sub.ScreenSU.Start
+gui.SS_Form1..create
+gui.SS_Form1..caption("Weekly Payroll Report")
+gui.SS_Form1..size(4135,1825)
+gui.SS_Form1..position(0,0)
+gui.SS_Form1..event(unload,Unload)
+gui.SS_Form1..alwaysontop(False)
+gui.SS_Form1..fontname("Arial")
+gui.SS_Form1..fontsize(8)
+gui.SS_Form1..forecolor(0)
+gui.SS_Form1..fontstyle(,,,,)
+gui.SS_Form1..BackColor(-2147483633)
+gui.SS_Form1..controlbox(True)
+gui.SS_Form1..maxbutton(False)
+gui.SS_Form1..minbutton(False)
+gui.SS_Form1..mousepointer(0)
+gui.SS_Form1..moveable(True)
+gui.SS_Form1..sizeable(False)
+gui.SS_Form1..ShowInTaskBar(True)
+gui.SS_Form1..titlebar(True)
+gui.SS_Form1.lbl_dtpBeg.create(label,"Beginning Date",True,1800,200,1,100,135,True,0,Arial,8,-2147483633,0)
+gui.SS_Form1.dtpBeg.create(datepicker)
+gui.SS_Form1.dtpBeg.visible(True)
+gui.SS_Form1.dtpBeg.size(1800,345)
+gui.SS_Form1.dtpBeg.zorder(0)
+gui.SS_Form1.dtpBeg.position(100,335)
+gui.SS_Form1.dtpBeg.enabled(True)
+gui.SS_Form1.dtpBeg.event(change,dtpbeg_change)
+gui.SS_Form1.dtpBeg.checkbox(False)
+gui.SS_Form1.lbl_dtpEnd.create(label,"Ending Date",True,1800,200,1,1985,135,True,0,Arial,8,-2147483633,0)
+gui.SS_Form1.dtpEnd.create(datepicker)
+gui.SS_Form1.dtpEnd.visible(True)
+gui.SS_Form1.dtpEnd.size(1800,345)
+gui.SS_Form1.dtpEnd.zorder(0)
+gui.SS_Form1.dtpEnd.position(1985,335)
+gui.SS_Form1.dtpEnd.enabled(True)
+gui.SS_Form1.dtpEnd.checkbox(False)
+gui.SS_Form1.cmdOk.create(button)
+gui.SS_Form1.cmdOk.caption("Ok")
+gui.SS_Form1.cmdOk.visible(True)
+gui.SS_Form1.cmdOk.size(1000,360)
+gui.SS_Form1.cmdOk.zorder(0)
+gui.SS_Form1.cmdOk.position(100,850)
+gui.SS_Form1.cmdOk.enabled(True)
+gui.SS_Form1.cmdOk.fontname("Arial")
+gui.SS_Form1.cmdOk.fontsize(8)
+gui.SS_Form1.cmdOk.event(click,cmdok_click)
+gui.SS_Form1.dtpBeg.tabstop(true)
+gui.SS_Form1.dtpBeg.tabindex(1)
+gui.SS_Form1.dtpEnd.tabstop(true)
+gui.SS_Form1.dtpEnd.tabindex(2)
+gui.SS_Form1.cmdOk.tabstop(true)
+gui.SS_Form1.cmdOk.tabindex(3)
+
+
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+
+Variable.UDT.Emp.Define("Employee",String,Employee)
+Variable.UDT.Emp.Define("Name",String,Name)
+Variable.UDT.Emp.Define("PR_Not_Elig_Hol",String,PR_Not_Elig_Hol)
+Variable.UDT.Emp.Define("Elig_Hol_Date",Date,Elig_Hol_Date,"MMDDYY")
+Variable.uGlobal.uEmp.Declare("Emp")
+
+Variable.UDT.JobDetail.Define("Empl",String,Empl)
+Variable.UDT.JobDetail.Define("Job",String,Job)
+Variable.UDT.JobDetail.Define("Rate_Type",String,Rate_Type)
+Variable.UDT.JobDetail.Define("Hours_Worked",Float,Hours_Worked)
+Variable.UDT.JobDetail.Define("Flag_Indirect",String,Flag_Indirect)
+Variable.uGlobal.uJobDetail.Declare("JobDetail")
+
+Variable.UDT.Timat.Define("Empoyee",String,Employee)
+Variable.UDT.Timat.Define("Hours_HH",Float,Hours_HH)
+Variable.UDT.Timat.Define("Hours_MM",Float,Hours_MM)
+Variable.UDT.Timat.Define("Earnings_Code",String,Earnings_Code)
+Variable.uGlobal.uTimat.Declare("Timat")
+
+
+Variable.UDT.Hol.Define("Hours",Float)
+Variable.UDT.Hol.Define("Holiday",Date)
+Variable.uGlobal.uHol.Declare("Hol")
+
+Variable.UDT.JobTot.Define("Job",String,Job)
+Variable.UDT.JobTot.Define("OT_Hours",Float)
+Variable.UDT.JobTot.Define("DT_Hours",Float)
+Variable.UDT.JobTot.Define("Reg_Hours",Float)
+Variable.uGlobal.uJobTot.Declare("JobTot")
+
+Variable.UDT.TmpJobTot.Define("Job",String,Job)
+Variable.UDT.TmpJobTot.Define("Reg_Hours",Float)
+Variable.uGlobal.uTmpJobTot.Declare("TmpJobTot")
+
+Variable.UDT.TimatTot.Define("Hours_HH",Float,Hours_HH)
+Variable.UDT.TimatTot.Define("Hours_MM",Float,Hours_MM)
+Variable.UDT.TimatTot.Define("Earnings_Code",String,Earnings_Code)
+Variable.uGlobal.uTimatTot.Declare("TimatTot")
+
+Variable.UDT.EmpTot.Define("Empl",String,Empl)
+Variable.UDT.EmpTot.Define("hours",Float,hours)
+Variable.uGlobal.uEmpTot.Declare("EmpTot")
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+
+F.ODBC.Connection!Con.OpenConnection(V.Ambient.PDSN,V.Ambient.PUser,V.Ambient.PPass,500)
+F.Intrinsic.Control.CallSub(Dtpbeg_change)
+Gui.SS_Form1..Show
+
+Program.Sub.Main.End
+
+Program.Sub.Unload.Start
+
+F.ODBC.Connection!Con.Close
+F.Intrinsic.Control.end
+
+Program.Sub.Unload.End
+
+program.sub.dtpbeg_change.start
+
+V.Local.dDate.Declare(Date)
+
+F.Intrinsic.Date.DateAdd("d",6,V.Screen.SS_Form1!dtpBeg.Value,V.Local.dDate)
+Gui.SS_Form1.dtpEnd.Value(V.Local.dDate)
+
+program.sub.dtpbeg_change.end
+
+program.sub.cmdok_click.start
+
+Gui.SS_Form1..Visible(false)
+V.uGlobal.uEmp.Redim(-1,-1)
+
+' build udt for all employee information
+F.ODBC.Connection!Con.OpenRecordsetRO("rstSel","select Employee, Name,PR_Not_Elig_Hol,Elig_Hol_Date from Employee_Mstr order by Employee")
+	F.Intrinsic.Control.If(V.ODBC.Con!rstSel.EOF,=,False)
+		F.Intrinsic.Variable.LoadUDTFromRecordset("Con","rstSel","v.uGlobal.uEmp",False)
+	F.Intrinsic.Control.EndIf
+F.ODBC.Con!rstSel.Close
+
+F.Intrinsic.Control.CallSub(Holidays)
+F.Intrinsic.Control.CallSub(Jobdetail)
+F.Intrinsic.Control.CallSub(Additionalhours)
+F.Intrinsic.Control.CallSub(Builddata)
+F.Intrinsic.Control.CallSub(Unload)
+
+program.sub.cmdok_click.end
+
+Program.Sub.JobDetail.Start
+
+
+V.Local.sSel.Declare(String)
+V.Local.sBegDate.Declare(String)
+V.Local.sEndDate.Declare(String)
+V.Local.sRet.Declare(String)
+V.Local.iFor.Declare(Long)
+V.Local.iRedim.Declare(Long)
+
+' format dates for selection
+F.Intrinsic.String.Format(V.Screen.SS_Form1!dtpBeg.Value,"YYYYMMDD",V.Local.sBegDate)
+F.Intrinsic.String.Format(V.Screen.SS_Form1!dtpEnd.Value,"YYYYMMDD",V.Local.sEndDate)
+
+' get total hours for each employee
+F.Intrinsic.String.Concat("select Empl, sum(Hours_Worked) as hours from Job_Detail where LMO='L' and Charge_Date between '",V.Local.sBegDate,"' and '",V.Local.sEndDate,"' group by Empl",V.Local.sSel)
+F.ODBC.Connection!Con.OpenRecordsetRO("rstSel",V.Local.sSel)
+	F.Intrinsic.Control.If(V.ODBC.Con!rstSel.EOF,=,False)
+		F.Intrinsic.Variable.LoadUDTFromRecordset("Con","rstSel","v.uGlobal.uEmpTot",False,1)
+	F.Intrinsic.Control.EndIf
+F.ODBC.Con!rstSel.Close
+
+'================================================================================================
+
+V.uGlobal.uJobDetail.Redim(-1,-1)
+' get employee total by job
+F.Intrinsic.String.Concat("select Empl, left(Job,4) as Job, Rate_Type, sum(Hours_Worked) as Hours_Worked,Flag_Indirect from Job_Detail where LMO='L' and Charge_Date between '",V.Local.sBegDate,"' and '",V.Local.sEndDate,"' group by Empl, Job, Rate_Type,Flag_Indirect",V.Local.sSel)
+F.ODBC.Connection!Con.OpenRecordsetRO("rstSel",V.Local.sSel)
+	F.Intrinsic.Control.If(V.ODBC.Con!rstSel.EOF,=,False)
+		F.Intrinsic.Variable.LoadUDTFromRecordset("Con","rstSel","v.uGlobal.uJobDetail",False,1)
+	F.Intrinsic.Control.EndIf
+F.ODBC.Con!rstSel.Close
+
+' reset the IND job
+F.Intrinsic.Variable.UDTMultiSeekSet(V.uGlobal.uJobDetail!Flag_Indirect,"I",V.uGlobal.uJobDetail!Job,"IND")
+
+'================================================================================================
+' get total Reg hours by job
+F.Intrinsic.String.Concat("select left(Job,4) as Job,sum(Hours_Worked) as Reg_Hours from Job_Detail ","",V.Local.sSel)
+F.Intrinsic.String.Concat(V.Local.sSel,"inner join Employee_Mstr on Job_Detail.Empl=Employee_Mstr.Employee ",V.Local.sSel)
+F.Intrinsic.String.Concat(V.Local.sSel," where LMO='L' and Flag_Indirect<>'I' and Charge_Date between '",V.Local.sBegDate,"' and '",V.Local.sEndDate,"'  and Rate_Type='R' group by Job",V.Local.sSel)
+F.ODBC.Connection!Con.OpenRecordsetRO("rstSel",V.Local.sSel)
+	F.Intrinsic.Control.If(V.ODBC.Con!rstSel.EOF,=,False)
+		F.Intrinsic.Variable.LoadUDTFromRecordset("Con","rstSel","v.uGlobal.uJobTot",False,1)
+	F.Intrinsic.Control.EndIf
+F.ODBC.Con!rstSel.Close
+
+' get total OT hours by job
+V.uGlobal.uTmpJobTot.Redim(-1,-1)
+F.Intrinsic.String.Concat("select left(Job,4) as Job,sum(Hours_Worked) as Reg_Hours from Job_Detail ","",V.Local.sSel)
+F.Intrinsic.String.Concat(V.Local.sSel,"inner join Employee_Mstr on Job_Detail.Empl=Employee_Mstr.Employee ",V.Local.sSel)
+F.Intrinsic.String.Concat(V.Local.sSel,"where LMO='L' and Flag_Indirect<>'I' and Charge_Date between '",V.Local.sBegDate,"' and '",V.Local.sEndDate,"'  and Rate_Type='O' group by Job",V.Local.sSel)
+F.ODBC.Connection!Con.OpenRecordsetRO("rstSel",V.Local.sSel)
+	F.Intrinsic.Control.If(V.ODBC.Con!rstSel.EOF,=,False)
+		F.Intrinsic.Variable.LoadUDTFromRecordset("Con","rstSel","v.uGlobal.uTmpJobTot",False,1)
+	F.Intrinsic.Control.EndIf
+F.ODBC.Con!rstSel.Close
+
+' if OT hours are found, add them to the JobTot udt
+F.Intrinsic.Control.If(V.uGlobal.uTmpJobTot!Job.UBound,<>,-1)
+	F.Intrinsic.Control.For(V.Local.iFor,V.uGlobal.uTmpJobTot!Job.LBound,V.uGlobal.uTmpJobTot!Job.UBound,1)
+		F.Intrinsic.Variable.UDTMultiSeek(V.uGlobal.uJobTot!Job,V.uGlobal.uTmpJobTot(V.Local.iFor)!Job,V.Local.sRet)
+		F.Intrinsic.Control.If(V.Local.sRet,<>,"")
+			F.Intrinsic.String.Split(V.Local.sRet,"*!*",V.Local.sRet)
+			V.uGlobal.uJobTot(v.Local.sRet)!OT_Hours.Set(V.uGlobal.uTmpJobTot(v.Local.iFor)!Reg_Hours)
+		F.Intrinsic.Control.Else
+			F.Intrinsic.Math.Add(V.uGlobal.uJobTot!Job.UBound,1,V.Local.iRedim)
+			V.uGlobal.uJobTot.RedimPreserve(0,V.Local.iRedim)
+			V.uGlobal.uJobTot(v.Local.iRedim)!OT_Hours.Set(V.uGlobal.uTmpJobTot(v.Local.iFor)!Reg_Hours)
+		F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.Next(V.Local.iFor)
+F.Intrinsic.Control.endif
+
+' redim to re-use
+V.uGlobal.uTmpJobTot.Redim(-1,-1)
+
+' get total DT hours by job
+F.Intrinsic.String.Concat("select left(Job,4) as Job,sum(Hours_Worked) as Reg_Hours from Job_Detail ","",V.Local.sSel)
+F.Intrinsic.String.Concat(V.Local.sSel,"inner join Employee_Mstr on Job_Detail.Empl=Employee_Mstr.Employee ",V.Local.sSel)
+F.Intrinsic.String.Concat(V.Local.sSel," where LMO='L' and Flag_Indirect<>'I' and Charge_Date between '",V.Local.sBegDate,"' and '",V.Local.sEndDate,"'  and Rate_Type='D' group by Job",V.Local.sSel)
+F.ODBC.Connection!Con.OpenRecordsetRO("rstSel",V.Local.sSel)
+	F.Intrinsic.Control.If(V.ODBC.Con!rstSel.EOF,=,False)
+		F.Intrinsic.Variable.LoadUDTFromRecordset("Con","rstSel","v.uGlobal.uTmpJobTot",False,1)
+	F.Intrinsic.Control.EndIf
+F.ODBC.Con!rstSel.Close
+
+' if DT hours are found, add them to the JobTot udt
+F.Intrinsic.Control.If(V.uGlobal.uTmpJobTot!Job.UBound,<>,-1)
+	F.Intrinsic.Control.For(V.Local.iFor,V.uGlobal.uTmpJobTot!Job.LBound,V.uGlobal.uTmpJobTot!Job.UBound,1)
+		F.Intrinsic.Variable.UDTMultiSeek(V.uGlobal.uJobTot!Job,V.uGlobal.uTmpJobTot(V.Local.iFor)!Job,V.Local.sRet)
+		F.Intrinsic.Control.If(V.Local.sRet,<>,"")
+			F.Intrinsic.String.Split(V.Local.sRet,"*!*",V.Local.sRet)
+			V.uGlobal.uJobTot(v.Local.sRet)!DT_Hours.Set(V.uGlobal.uTmpJobTot(v.Local.iFor)!Reg_Hours)
+		F.Intrinsic.Control.Else
+			F.Intrinsic.Math.Add(V.uGlobal.uJobTot!Job.UBound,1,V.Local.iRedim)
+			V.uGlobal.uJobTot.RedimPreserve(0,V.Local.iRedim)
+			V.uGlobal.uJobTot(v.Local.iRedim)!DT_Hours.Set(V.uGlobal.uTmpJobTot(v.Local.iFor)!Reg_Hours)
+		F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.Next(V.Local.iFor)
+F.Intrinsic.Control.EndIf
+
+' redim to re-use
+V.uGlobal.uTmpJobTot.Redim(-1,-1)
+
+' get total IND hours by job
+F.Intrinsic.String.Concat("select 'IND' as Job,sum(Hours_Worked) as Reg_Hours from Job_Detail ","",V.Local.sSel)
+F.Intrinsic.String.Concat(V.Local.sSel,"inner join Employee_Mstr on Job_Detail.Empl=Employee_Mstr.Employee ",V.Local.sSel)
+F.Intrinsic.String.Concat(V.Local.sSel," where LMO='L' and Flag_Indirect='I' and Charge_Date between '",V.Local.sBegDate,"' and '",V.Local.sEndDate,"'  group by Job",V.Local.sSel)
+F.ODBC.Connection!Con.OpenRecordsetRO("rstSel",V.Local.sSel)
+	F.Intrinsic.Control.If(V.ODBC.Con!rstSel.EOF,=,False)
+		F.Intrinsic.Variable.LoadUDTFromRecordset("Con","rstSel","v.uGlobal.uTmpJobTot",False,1)
+	F.Intrinsic.Control.EndIf
+F.ODBC.Con!rstSel.Close
+
+' if IND hours are found, add them to the JobTot udt
+F.Intrinsic.Control.If(V.uGlobal.uTmpJobTot!Job.UBound,<>,-1)
+	F.Intrinsic.Math.Add(V.uGlobal.uJobTot!Job.UBound,1,V.Local.iRedim)
+	V.uGlobal.uJobTot.RedimPreserve(0,V.Local.iRedim)
+	V.uGlobal.uJobTot(v.Local.iRedim)!Reg_Hours.Set(V.uGlobal.uTmpJobTot(0)!Reg_Hours)
+	V.uGlobal.uJobTot(v.Local.iRedim)!Job.Set("IND")
+F.Intrinsic.Control.EndIf
+
+' redim to make debugging easier
+V.uGlobal.uTmpJobTot.Redim(-1,-1)
+
+Program.Sub.JobDetail.End
+
+Program.Sub.AdditionalHours.Start
+
+V.Local.sSel.Declare(String)
+V.Local.iFor.Declare(Long)
+V.Local.sBegDate.Declare(String)
+V.Local.sEndDate.Declare(String)
+
+' format dates for selection
+F.Intrinsic.String.Format(V.Screen.SS_Form1!dtpBeg.Value,"YYYYMMDD",V.Local.sBegDate)
+F.Intrinsic.String.Format(V.Screen.SS_Form1!dtpEnd.Value,"YYYYMMDD",V.Local.sEndDate)
+
+V.uGlobal.uTimat.Redim(-1,-1)
+
+' get addiitonal earnings
+F.Intrinsic.String.Concat("select Employee, Earnings_Code, sum(Hours_HH) as Hours_HH, sum(HOURS_MM) as Hours_MM from Time_Attendance where Rec_Type='A' and Paid='Y' and Excused ='Y' and Charge_Date between '",V.Local.sBegDate,"' and '",V.Local.sEndDate,"' group by Employee, Earnings_Code",V.Local.sSel)
+F.ODBC.Connection!Con.OpenRecordsetRO("rstSel",V.Local.sSel)
+	F.Intrinsic.Control.If(V.ODBC.Con!rstSel.EOF,=,False)
+		F.Intrinsic.Variable.LoadUDTFromRecordset("Con","rstSel","v.uGlobal.uTimat",False)
+	F.Intrinsic.Control.EndIf
+F.ODBC.Con!rstSel.Close
+
+' if time is not found, exit sub
+F.Intrinsic.Control.If(V.uGlobal.uTimat!Empoyee.UBound,=,-1)
+	F.Intrinsic.Control.ExitSub
+F.Intrinsic.Control.EndIf
+
+' get hours in decimal
+F.Intrinsic.Control.For(V.Local.iFor,V.uGlobal.uTimat!Empoyee.LBound,V.uGlobal.uTimat!Empoyee.UBound,1)
+	F.Intrinsic.Math.Div(V.uGlobal.uTimat(v.Local.iFor)!Hours_MM,60,V.uGlobal.uTimat(v.Local.iFor)!Hours_MM)
+	F.Intrinsic.Math.Round(V.uGlobal.uTimat(v.Local.iFor)!Hours_MM,2,V.uGlobal.uTimat(v.Local.iFor)!Hours_MM)
+	F.Intrinsic.Math.Add(V.uGlobal.uTimat(v.Local.iFor)!Hours_HH,V.uGlobal.uTimat(v.Local.iFor)!Hours_MM,V.uGlobal.uTimat(v.Local.iFor)!Hours_HH)
+F.Intrinsic.Control.Next(V.Local.iFor)
+
+' set correct ec
+F.Intrinsic.Variable.UDTMultiSeekSet(V.uGlobal.uTimat!Earnings_Code,"02",V.uGlobal.uTimat!Earnings_Code,"SICK")
+F.Intrinsic.Variable.UDTMultiSeekSet(V.uGlobal.uTimat!Earnings_Code,"03",V.uGlobal.uTimat!Earnings_Code,"VACT")
+F.Intrinsic.Variable.UDTMultiSeekSet(V.uGlobal.uTimat!Earnings_Code,"04",V.uGlobal.uTimat!Earnings_Code,"BRVT")
+F.Intrinsic.Variable.UDTMultiSeekSet(V.uGlobal.uTimat!Earnings_Code,"05",V.uGlobal.uTimat!Earnings_Code,"HLDY")
+
+'================================================================================================
+
+V.uGlobal.uTimatTot.Redim(-1,-1)
+
+' get sum addiitonal earnings
+F.Intrinsic.String.Concat("select Earnings_Code, sum(Hours_HH) as Hours_HH, sum(HOURS_MM) as Hours_MM from Time_Attendance where Rec_Type='A' and Paid='Y' and Excused ='Y' and Charge_Date between '",V.Local.sBegDate,"' and '",V.Local.sEndDate,"' group by Earnings_Code",V.Local.sSel)
+F.ODBC.Connection!Con.OpenRecordsetRO("rstSel",V.Local.sSel)
+	F.Intrinsic.Control.If(V.ODBC.Con!rstSel.EOF,=,False)
+		F.Intrinsic.Variable.LoadUDTFromRecordset("Con","rstSel","v.uGlobal.uTimatTot",False)
+	F.Intrinsic.Control.EndIf
+F.ODBC.Con!rstSel.Close
+
+' get hours in decimal
+F.Intrinsic.Control.For(V.Local.iFor,V.uGlobal.uTimatTot!Earnings_Code.LBound,V.uGlobal.uTimatTot!Earnings_Code.UBound,1)
+	F.Intrinsic.Math.Div(V.uGlobal.uTimatTot(v.Local.iFor)!Hours_MM,60,V.uGlobal.uTimatTot(v.Local.iFor)!Hours_MM)
+	F.Intrinsic.Math.Round(V.uGlobal.uTimatTot(v.Local.iFor)!Hours_MM,2,V.uGlobal.uTimatTot(v.Local.iFor)!Hours_MM)
+	F.Intrinsic.Math.Add(V.uGlobal.uTimatTot(v.Local.iFor)!Hours_HH,V.uGlobal.uTimatTot(v.Local.iFor)!Hours_MM,V.uGlobal.uTimatTot(v.Local.iFor)!Hours_HH)
+F.Intrinsic.Control.Next(V.Local.iFor)
+
+' set correct ec
+F.Intrinsic.Variable.UDTMultiSeekSet(V.uGlobal.uTimatTot!Earnings_Code,"02",V.uGlobal.uTimatTot!Earnings_Code,"SICK")
+F.Intrinsic.Variable.UDTMultiSeekSet(V.uGlobal.uTimatTot!Earnings_Code,"03",V.uGlobal.uTimatTot!Earnings_Code,"VACT")
+F.Intrinsic.Variable.UDTMultiSeekSet(V.uGlobal.uTimatTot!Earnings_Code,"04",V.uGlobal.uTimatTot!Earnings_Code,"BRVT")
+F.Intrinsic.Variable.UDTMultiSeekSet(V.uGlobal.uTimatTot!Earnings_Code,"05",V.uGlobal.uTimatTot!Earnings_Code,"HLDY")
+
+
+
+Program.Sub.AdditionalHours.End
+
+Program.Sub.PrintReport.Start
+
+V.Local.sFileLoc.Declare(String)
+V.Local.iHndl.Declare(Long)
+V.Local.bExists.Declare(Boolean)
+
+
+F.Intrinsic.String.Concat(V.Caller.TempDir,"\Weekly Payroll.xls",V.Local.sFileLoc)
+F.Intrinsic.File.Exists(V.Local.sFileLoc,V.Local.bExists)
+	F.Intrinsic.Control.If(V.Local.bExists,=,True)
+		F.Intrinsic.File.DeleteFile(V.Local.sFileLoc)
+	F.Intrinsic.Control.EndIf
+
+F.Automation.MSExcel.WriteSpreadsheet(V.Local.sFileLoc,V.Args.Data)
+F.Intrinsic.Task.ShellExec(V.Local.iHndl,"open",V.Local.sFileLoc,"","",1)
+
+Program.Sub.PrintReport.End
+
+Program.Sub.Holidays.Start
+
+V.Local.sHolidays.Declare(String)
+V.Local.dDate.Declare(Date)
+V.Local.iFor.Declare(Long)
+V.Local.sRet.Declare(String)
+V.Local.iDayOfWeek.Declare(Long)
+V.Local.iRedim.Declare(Long)
+V.Local.fTotHol.Declare(Float)
+
+V.Local.iRedim.Set(-1)
+
+' get all holidays
+F.ODBC.Connection!Con.OpenRecordsetRO("rstSel","select * from Holiday_Sched where Funct='RS' and Type='CL'")
+	F.Intrinsic.Control.If(V.ODBC.Con!rstSel.EOF,=,False)
+		F.ODBC.Con!rstSel.Record2String(V.Local.sHolidays)
+	F.Intrinsic.Control.Else
+		F.Intrinsic.Control.ExitSub
+	F.Intrinsic.Control.EndIf
+F.ODBC.Con!rstSel.Close
+
+' if no holidays are found, exit the sub, there's nothing more to do here.
+F.Intrinsic.Control.If(V.Local.sHolidays.Trim,=,"")
+	F.Intrinsic.Control.ExitSub
+F.Intrinsic.Control.EndIf
+
+
+' split the string
+F.Intrinsic.String.Split(V.Local.sHolidays,"*!*",V.Local.sHolidays)
+V.Local.sHolidays.RedimPreserve(0,35)
+
+' for each holiday (not all records will be holidays)
+F.Intrinsic.Control.For(V.Local.iFor,6,35,1)
+
+	' if the field is not blank
+	F.Intrinsic.Control.If(V.Local.sHolidays(v.Local.iFor).Trim,<>,"")
+	F.Intrinsic.Control.andIf(V.Local.sHolidays(v.Local.iFor).Trim,<>,"000000")
+
+		' convert it to a proper date
+		F.Intrinsic.Date.ConvertDString(V.Local.sHolidays(v.Local.iFor),"MMDDYY",V.Local.dDate)
+
+		' see if the holiday is in the entered date range
+		F.Intrinsic.Control.If(V.Local.dDate,>=,V.Screen.SS_Form1!dtpBeg.Value)
+		F.Intrinsic.Control.AndIf(V.Local.dDate,<=,V.Screen.SS_Form1!dtpEnd.Value)
+
+			'creat a string of hopliday dates in the date range
+			F.Intrinsic.String.Concat(V.Local.sRet,"*!*",V.Local.dDate,V.Local.sRet)
+		F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.EndIf
+F.Intrinsic.Control.Next(V.Local.iFor)
+
+' if no holidays are found, exit the sub, there's nothing more to do here.
+F.Intrinsic.Control.If(V.Local.sRet.Trim,=,"")
+	F.Intrinsic.Control.ExitSub
+F.Intrinsic.Control.EndIf
+
+' if you haven't exited, apparently holidays were found in the date range
+' split them out to see if they are on a Weekday, Saturday or Sunday
+F.Intrinsic.String.Split(V.Local.sRet,"*!*",V.Local.sRet)
+F.Intrinsic.Control.For(V.Local.iFor,1,V.Local.sRet.UBound,1)
+	F.Intrinsic.Math.Add(V.Local.iRedim,1,V.Local.iRedim)
+	V.uGlobal.uHol.RedimPreserve(0,V.Local.iRedim)
+	F.Intrinsic.Date.Weekday(V.Local.sRet(v.Local.iFor),V.Local.iDayOfWeek)
+
+	' 1 is Sunday
+	F.Intrinsic.Control.If(V.Local.iDayOfWeek,=,1)
+		V.uGlobal.uHol(v.Local.iRedim)!Hours.Set(V.Local.sHolidays(5))
+
+	' 7 is Saturday
+	F.Intrinsic.Control.ElseIf(V.Local.iDayOfWeek,=,7)
+		V.uGlobal.uHol(v.Local.iRedim)!Hours.Set(V.Local.sHolidays(4))
+
+	' all others are weekdays
+	F.Intrinsic.Control.Else
+		V.uGlobal.uHol(v.Local.iRedim)!Hours.Set(V.Local.sHolidays(3))
+	F.Intrinsic.Control.EndIf
+
+	' set the date
+	V.uGlobal.uHol(v.Local.iRedim)!Holiday.Set(V.Local.sRet(v.Local.iFor))
+	F.Intrinsic.Math.Add(V.Local.fTotHol,V.uGlobal.uHol(v.Local.iRedim)!Hours,V.Local.fTotHol)
+F.Intrinsic.Control.Next(V.Local.iFor)
+
+Program.Sub.Holidays.End
+
+Program.Sub.BuildData.Start
+
+
+
+V.Local.iFor.Declare(Long)
+V.Local.iForRet.Declare(Long)
+V.Local.sRet.Declare(String)
+V.Local.sEmpHeadr.Declare(String)
+V.Local.sHours.Declare(String)
+V.Local.sFIleData.Declare(String)
+V.Local.fRegHrs.Declare(Float)
+V.Local.fOTHrs.Declare(Float)
+V.Local.fDTHrs.Declare(Float)
+V.Local.fJbRegHrs.Declare(Float)
+V.Local.fJbOTHrs.Declare(Float)
+V.Local.fJbDTHrs.Declare(Float)
+V.Local.fWkRegHrs.Declare(Float)
+V.Local.fWkOTHrs.Declare(Float)
+V.Local.fWkDtHrs.Declare(Float)
+V.Local.iValue.Declare(Long)
+V.Local.iHrs.Declare(Long)
+V.Local.iMin.Declare(Long)
+V.Local.sJob.Declare(String)
+V.Local.sFirstJob.Declare(String)
+V.Local.sString.Declare(String)
+V.Local.fHolHrs.Declare(Float)
+V.Local.sFormatVal.Declare(String)
+V.Local.iRet.Declare(Long)
+V.Local.fDecHrs.Declare(Float)
+V.Local.fDecMin.Declare(Float)
+V.Local.fVal.Declare(Float)
+V.Local.sJobRet.Declare(String)
+V.Local.sEmpRet.Declare(String)
+
+' if no hours are found, exit the sub
+F.Intrinsic.Control.If(V.uGlobal.uHol!Holiday.UBound,=,-1)
+F.Intrinsic.Control.AndIf(V.uGlobal.uJobDetail!Empl.UBound,=,-1)
+F.Intrinsic.Control.AndIf(V.uGlobal.uTimat!Empoyee.UBound,=,-1)
+	F.Intrinsic.Control.ExitSub
+F.Intrinsic.Control.EndIf
+
+' write column headings
+V.Local.sFIleData.Set("Period*!*Employee*!*Job#*!*Reg Hrs*!*O/T Hrs*!*D/T Hrs")
+
+' sort Employees by Name
+F.Intrinsic.Variable.UDTMultiQuickSort(V.uGlobal.uEmp!Name,False)
+
+' set default hours to 0
+F.Intrinsic.Variable.UDTSetMemberValue(V.uGlobal.uJobTot!Reg_Hours,0)
+F.Intrinsic.Variable.UDTSetMemberValue(V.uGlobal.uJobTot!DT_Hours,0)
+F.Intrinsic.Variable.UDTSetMemberValue(V.uGlobal.uJobTot!OT_Hours,0)
+
+' sort jobs by Job, Suffix, Earnings code
+F.Intrinsic.Variable.UDTMultiQuickSort(V.uGlobal.uJobDetail!Empl,False,V.uGlobal.uJobDetail!Job,False,V.uGlobal.uJobDetail!Rate_Type,False)
+
+' for each employee
+F.Intrinsic.Control.For(V.Local.iFor,V.uGlobal.uEmp!Employee.LBound,V.uGlobal.uEmp!Employee.UBound,1)
+
+	' prepare  Employee Heading
+	F.Intrinsic.String.Concat("$!$",V.Screen.SS_Form1!dtpEnd.Value,"*!*",V.uGlobal.uEmp(v.Local.iFor)!Name,V.Local.sEmpHeadr)
+
+	' empty strings
+	V.Local.sHours.Set("")
+	V.Local.sJob.Set("")
+	V.Local.sFirstJob.Set("")
+
+	' reset floats
+	V.Local.fDTHrs.Set(0)
+	V.Local.fOTHrs.Set(0)
+	V.Local.fRegHrs.Set(0)
+
+	' if job detail records are found
+	F.Intrinsic.Control.If(V.uGlobal.uJobDetail!Empl.UBound,<>,-1)
+
+		' see if current employee has hours
+		F.Intrinsic.Variable.UDTMultiSeek(V.uGlobal.uJobDetail!Empl,V.uGlobal.uEmp(v.Local.iFor)!Employee,V.Local.sRet)
+		F.Intrinsic.Control.If(V.Local.sRet,<>,"")
+
+			' for each of the employee's job records
+			F.Intrinsic.String.Split(V.Local.sRet,"*!*",V.Local.sRet)
+			F.Intrinsic.Control.For(V.Local.iForRet,V.Local.sRet.LBound,V.Local.sRet.UBound,1)
+
+				' set employee's first job for printed line
+				F.Intrinsic.Control.If(V.Local.sFirstJob,=,"")
+					V.Local.sFirstJob.Set(V.uGlobal.uJobDetail(V.Local.sRet(v.Local.iForRet))!Job)
+				F.Intrinsic.Control.EndIf
+
+				' if not the same job, concatenate line; need to set columnms based on RT, OT, DT
+				F.Intrinsic.Control.If(V.Local.sJob,<>,V.uGlobal.uJobDetail(V.Local.sRet(v.Local.iForRet))!Job)
+
+						' get total job hours
+						F.Intrinsic.Variable.UDTMultiSeek(V.uGlobal.uJobTot!Job,V.Local.sJob,V.Local.sJobRet)
+						F.Intrinsic.Control.If(V.Local.sJobRet,<>,"")
+							F.Intrinsic.String.Split(V.Local.sJobRet,"*!*",V.Local.sJobRet)
+							F.Intrinsic.Math.Add(V.uGlobal.uJobTot(v.Local.sJobRet)!Reg_Hours,V.Local.fJbRegHrs,V.uGlobal.uJobTot(v.Local.sJobRet)!Reg_Hours)
+							F.Intrinsic.Math.Add(V.uGlobal.uJobTot(v.Local.sJobRet)!OT_Hours,V.Local.fJbOTHrs,V.uGlobal.uJobTot(v.Local.sJobRet)!OT_Hours)
+							F.Intrinsic.Math.Add(V.uGlobal.uJobTot(v.Local.sJobRet)!DT_Hours,V.Local.fJbDTHrs,V.uGlobal.uJobTot(v.Local.sJobRet)!DT_Hours)
+						F.Intrinsic.Control.EndIf
+
+					' if the employee has more than a single job
+					F.Intrinsic.Control.If(V.Local.iForRet,>,1)
+
+						' on first job, concatenate first line of hours
+						F.Intrinsic.Control.If(V.Local.sFirstJob,=,V.Local.sJob)
+							F.Intrinsic.String.Concat(V.Local.sHours,"*!*",V.Local.sJob,"*!*",V.Local.fJBRegHrs,"*!*",V.Local.fJbOTHrs,"*!*",V.Local.fJbDTHrs,V.Local.sHours)
+							F.Intrinsic.Math.Add(V.Local.fRegHrs,V.Local.fJbRegHrs,V.Local.fRegHrs)
+
+						' add new line ($!$) for subsequent lines
+						F.Intrinsic.Control.Else
+							F.Intrinsic.String.Concat(V.Local.sHours,"$!$*!**!*",V.Local.sJob,"*!*",V.Local.fJBRegHrs,"*!*",V.Local.fJbOTHrs,"*!*",V.Local.fJbDTHrs,V.Local.sHours)
+							F.Intrinsic.Math.Add(V.Local.fRegHrs,V.Local.fJbRegHrs,V.Local.fRegHrs)
+						F.Intrinsic.Control.EndIf
+
+					' if only 1 job, concatenate single line of hours
+					F.Intrinsic.Control.Elseif(V.Local.iForRet,=,1)
+						F.Intrinsic.String.Concat(V.Local.sHours,"*!*",V.Local.sJob,"*!*",V.Local.fJbRegHrs,"*!*",V.Local.fJbOTHrs,"*!*",V.Local.fJbDTHrs,V.Local.sHours)
+						F.Intrinsic.Math.Add(V.Local.fRegHrs,V.Local.fJbRegHrs,V.Local.fRegHrs)
+					F.Intrinsic.Control.EndIf
+
+					' reset hours totals
+					V.Local.fJbDTHrs.Set(0)
+					V.Local.fJbOTHrs.Set(0)
+					V.Local.fJbRegHrs.Set(0)
+				F.Intrinsic.Control.EndIf
+
+				F.Intrinsic.Math.Round(V.uGlobal.uJobDetail(v.Local.sRet(v.Local.iForRet))!Hours_Worked,1,V.uGlobal.uJobDetail(v.Local.sRet(v.Local.iForRet))!Hours_Worked)
+
+				' Regular = "R" or <blank>
+				F.Intrinsic.Control.If(V.uGlobal.uJobDetail(v.Local.sRet(v.Local.iForRet))!Rate_Type,=,"R")
+					F.Intrinsic.Math.Add(V.Local.fJbRegHrs,V.uGlobal.uJobDetail(v.Local.sRet(v.Local.iForRet))!Hours_Worked,V.Local.fJbRegHrs)
+				F.Intrinsic.Control.ElseIf(V.uGlobal.uJobDetail(v.Local.sRet(v.Local.iForRet))!Rate_Type,=,"")
+					F.Intrinsic.Math.Add(V.Local.fjbRegHrs,V.uGlobal.uJobDetail(v.Local.sRet(v.Local.iForRet))!Hours_Worked,V.Local.fjbRegHrs)
+				F.Intrinsic.Control.EndIf
+
+				' OT="O"
+				F.Intrinsic.Control.If(V.uGlobal.uJobDetail(v.Local.sRet(v.Local.iForRet))!Rate_Type,=,"O")
+					F.Intrinsic.Math.Add(V.Local.fJbOTHrs,V.uGlobal.uJobDetail(v.Local.sRet(v.Local.iForRet))!Hours_Worked,V.Local.fJbOTHrs)
+					F.Intrinsic.Math.Add(V.Local.fOTHrs,V.uGlobal.uJobDetail(v.Local.sRet(v.Local.iForRet))!Hours_Worked,V.Local.fOTHrs)
+				F.Intrinsic.Control.EndIf
+
+				' DT = "D"
+				F.Intrinsic.Control.If(V.uGlobal.uJobDetail(v.Local.sRet(v.Local.iForRet))!Rate_Type,=,"D")
+					F.Intrinsic.Math.Add(V.Local.fJbDTHrs,V.uGlobal.uJobDetail(v.Local.sRet(v.Local.iForRet))!Hours_Worked,V.Local.fJbDTHrs)
+					F.Intrinsic.Math.Add(V.Local.fDTHrs,V.uGlobal.uJobDetail(v.Local.sRet(v.Local.iForRet))!Hours_Worked,V.Local.fDTHrs)
+				F.Intrinsic.Control.EndIf
+
+				' reset the job variable
+				V.Local.sJob.Set(V.uGlobal.uJobDetail(V.Local.sRet(v.Local.iForRet))!Job)
+
+			F.Intrinsic.Control.Next(V.Local.iForRet)
+
+			F.Intrinsic.Variable.UDTMultiSeek(V.uGlobal.uJobTot!Job,V.Local.sJob,V.Local.sJobRet)
+			F.Intrinsic.Control.If(V.Local.sJobRet,<>,"")
+				F.Intrinsic.String.Split(V.Local.sJobRet,"*!*",V.Local.sJobRet)
+
+				F.Intrinsic.Variable.UDTMultiSeek(V.uGlobal.uEmpTot!Empl,V.uGlobal.uEmp(v.Local.iFor)!Employee,V.Local.sEmpRet)
+				F.Intrinsic.Control.If(V.Local.sEmpRet,<>,"")
+					F.Intrinsic.Math.Round(V.uGlobal.uEmpTot(V.Local.sEmpRet)!Hours,1,V.uGlobal.uEmpTot(V.Local.sEmpRet)!Hours)
+					F.Intrinsic.Math.Add(V.Local.fRegHrs,V.Local.fJbRegHrs,V.Local.fVal)
+					F.Intrinsic.Math.Sub(V.uGlobal.uEmpTot(V.Local.sEmpRet)!Hours,V.Local.fVal,V.Local.fVal)
+					F.Intrinsic.Math.Round(V.Local.fVal,1,V.Local.fVal)
+					F.Intrinsic.Control.If(V.Local.fVal,>=,-.1)
+					F.Intrinsic.Control.andIf(V.Local.fVal,<=,.1)
+						F.Intrinsic.Math.Add(V.Local.fJbRegHrs,V.Local.fVal,V.Local.fJbRegHrs)
+					F.Intrinsic.Control.EndIf
+				F.Intrinsic.Control.EndIf
+
+				F.Intrinsic.Math.Add(V.uGlobal.uJobTot(v.Local.sJobRet)!Reg_Hours,V.Local.fJbRegHrs,V.uGlobal.uJobTot(v.Local.sJobRet)!Reg_Hours)
+				F.Intrinsic.Math.Add(V.uGlobal.uJobTot(v.Local.sJobRet)!OT_Hours,V.Local.fJbOTHrs,V.uGlobal.uJobTot(v.Local.sJobRet)!OT_Hours)
+				F.Intrinsic.Math.Add(V.uGlobal.uJobTot(v.Local.sJobRet)!DT_Hours,V.Local.fJbDTHrs,V.uGlobal.uJobTot(v.Local.sJobRet)!DT_Hours)
+
+			F.Intrinsic.Control.EndIf
+
+
+			F.Intrinsic.Control.If(V.Local.sJob,=,V.Local.sFirstJob)
+				F.Intrinsic.String.Concat(V.Local.sHours,"*!*",V.Local.sJob,"*!*",V.Local.fJBRegHrs,"*!*",V.Local.fJbOTHrs,"*!*",V.Local.fJbDTHrs,V.Local.sHours)
+				F.Intrinsic.Math.Add(V.Local.fRegHrs,V.Local.fJbRegHrs,V.Local.fRegHrs)
+			F.Intrinsic.Control.Else
+				F.Intrinsic.String.Concat(V.Local.sHours,"$!$*!**!*",V.Local.sJob,"*!*",V.Local.fJBRegHrs,"*!*",V.Local.fJbOTHrs,"*!*",V.Local.fJbDTHrs,V.Local.sHours)
+				F.Intrinsic.Math.Add(V.Local.fRegHrs,V.Local.fJbRegHrs,V.Local.fRegHrs)
+			F.Intrinsic.Control.EndIf
+
+		F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.endif
+
+	' if Additional Hours are found
+	F.Intrinsic.Control.If(V.uGlobal.uTimat!Empoyee.UBound,<>,-1)
+		F.Intrinsic.Variable.UDTMultiSeek(V.uGlobal.uTimat!Empoyee,V.uGlobal.uEmp(v.Local.iFor)!Employee,V.Local.sRet)
+		F.Intrinsic.Control.If(V.Local.sRet,<>,"")
+			F.Intrinsic.String.Split(V.Local.sRet,"*!*",V.Local.sRet)
+			F.Intrinsic.Control.For(V.Local.iForRet,V.Local.sRet.LBound,V.Local.sRet.UBound,1)
+				F.Intrinsic.Math.Add(V.Local.fRegHrs,V.uGlobal.uTimat(v.Local.sRet(v.Local.iForRet))!Hours_HH,V.Local.fRegHrs)
+			F.Intrinsic.Control.Next(V.Local.iForRet)
+			F.Intrinsic.Math.Sub(V.Local.iForRet,1,V.Local.iForRet)
+
+			' add line for more than 1 job per employee
+			F.Intrinsic.Control.If(V.Local.sHours,<>,"")
+				F.Intrinsic.String.Concat(V.Local.sHours,"$!$",V.Ambient.NewLine,"*!**!*",V.uGlobal.uTimat(v.Local.sRet(v.Local.iForRet))!Earnings_Code,"*!*",V.uGlobal.uTimat(v.Local.sRet(v.Local.iForRet))!Hours_HH,V.Local.sHours)
+			F.Intrinsic.Control.Else
+					F.Intrinsic.String.Concat(V.Local.sHours,"*!*",V.uGlobal.uTimat(v.Local.sRet(v.Local.iForRet))!Earnings_Code,"*!*",V.uGlobal.uTimat(v.Local.sRet(v.Local.iForRet))!Hours_HH,V.Local.sHours)
+			F.Intrinsic.Control.EndIf
+		F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.EndIf
+
+	' if Holidays are found, and if employee is eligible
+	F.Intrinsic.Control.If(V.uGlobal.uHol!Holiday.UBound,<>,-1)
+		F.Intrinsic.Control.For(V.Local.iForRet,V.uGlobal.uHol!Holiday.LBound,V.uGlobal.uHol!Holiday.UBound,1)
+			F.Intrinsic.Control.If(V.uGlobal.uEmp(v.Local.iFor)!PR_Not_Elig_Hol,<>,"Y")
+			F.Intrinsic.Control.AndIf(V.uGlobal.uEmp(v.Local.iForRet)!Elig_Hol_Date,<=,V.uGlobal.uHol(v.Local.iForHolRet)!Holiday)
+				F.Intrinsic.String.Format(V.uGlobal.uHol(v.Local.iForRet)!Hours,"0.0",V.uGlobal.uHol(v.Local.iForRet)!Hours)
+				F.Intrinsic.Math.Add(V.Local.fRegHrs,V.uGlobal.uHol(v.Local.iForRet)!Hours,V.Local.fRegHrs)
+				F.Intrinsic.Math.Add(V.Local.fHolHrs,V.uGlobal.uHol(v.Local.iForRet)!Hours,V.Local.fHolHrs)
+				F.Intrinsic.Control.If(V.Local.sHours,<>,"")
+					F.Intrinsic.String.Concat(V.Local.sHours,"$!$*!**!*HLDY*!*",V.uGlobal.uHol(v.Local.iForRet)!Hours,V.Local.sHours)
+				F.Intrinsic.Control.Else
+					F.Intrinsic.String.Concat(V.Local.sHours,"*!*HLDY*!*",V.uGlobal.uHol(v.Local.iForRet)!Hours,V.Local.sHours)
+				F.Intrinsic.Control.EndIf
+			F.Intrinsic.Control.EndIf
+		F.Intrinsic.Control.Next(V.Local.iForRet)
+	F.Intrinsic.Control.EndIf
+	
+	F.Intrinsic.Control.If(V.Local.sHours,<>,"")
+		F.Intrinsic.String.Concat(V.Local.sFIleData,"$!$",V.Local.sEmpHeadr,V.Local.sHours,"$!$",V.Local.sFIleData)
+		F.Intrinsic.String.Concat(V.Local.sFIleData,"*!**!**!*---------------*!*---------------*!*----------------$!$",V.Local.sFIleData)
+		F.Intrinsic.String.Concat(V.Local.sFIleData,"*!**!*Employee Total*!*",V.Local.fRegHrs,"*!*",V.Local.fOTHrs,"*!*",V.Local.fDTHrs,"$!$",V.Local.sFIleData)
+
+		F.Intrinsic.Math.Add(V.Local.fWkDtHrs,V.Local.fDTHrs,V.Local.fWkDtHrs)
+		F.Intrinsic.Math.Add(V.Local.fWkOTHrs,V.Local.fOTHrs,V.Local.fWkOTHrs)
+		F.Intrinsic.Math.Add(V.Local.fWkRegHrs,V.Local.fRegHrs,V.Local.fWkRegHrs)
+		V.Local.fJbRegHrs.Set(0)
+		V.Local.fJbOTHrs.Set(0)
+		V.Local.fJbDTHrs.Set(0)
+
+	F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.Next(V.Local.iFor)
+
+'write weekly total line
+F.Intrinsic.String.Concat(V.Local.sFIleData,"$!$*!**!**!*'===========*!*'==========*!*'==========$!$",V.Local.sFIleData)
+F.Intrinsic.String.Concat(V.Local.sFIleData,"*!**!*Weekly Total*!*",V.Local.fWkRegHrs,"*!*",V.Local.fWkOTHrs,"*!*",V.Local.fWkDtHrs,"$!$",V.Local.sFIleData)
+F.Intrinsic.String.Concat(V.Local.sFIleData,"*!**!**!*'===========*!*'==========*!*'==========$!$$!$",V.Local.sFIleData)
+
+'add Weekly Job Totals
+F.Intrinsic.Control.If(V.uGlobal.uJobTot!Job.UBound,<>,-1)
+	F.Intrinsic.Control.For(V.Local.iFor,V.uGlobal.uJobTot!Job.LBound,V.uGlobal.uJobTot!Job.UBound,1)
+		V.Local.sString.Set("")
+		F.Intrinsic.String.Concat("$!$",V.Screen.SS_Form1!dtpEnd.Value,"*!**!*",V.uGlobal.uJobTot(v.Local.iFor)!Job,V.Local.sString)
+		F.Intrinsic.String.Concat(V.Local.sString,"$!$*!**!**!*---------------*!*---------------*!*----------------",V.Local.sString)
+		F.Intrinsic.String.Concat(V.Local.sString,"$!$*!*Weekly Job Totals*!**!*",V.uGlobal.uJobTot(v.Local.iFor)!Reg_Hours,"*!*",V.uGlobal.uJobTot(v.Local.iFor)!OT_Hours,"*!*",V.uGlobal.uJobTot(v.Local.iFor)!DT_Hours,"$!$",V.Local.sString)
+		F.Intrinsic.String.Concat(V.Local.sFIleData,V.Local.sString,V.Local.sFIleData)
+	F.Intrinsic.Control.Next(V.Local.iFor)
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.If(V.uGlobal.uTimatTot!Earnings_Code.UBound,<>,-1)
+	F.Intrinsic.Control.For(V.Local.iFor,V.uGlobal.uTimatTot!Earnings_Code.LBound,V.uGlobal.uTimatTot!Earnings_Code.UBound,1)
+		V.Local.sString.Set("")
+		F.Intrinsic.String.Concat("$!$",V.Screen.SS_Form1!dtpEnd.Value,"*!**!*",V.uGlobal.uTimatTot(v.Local.iFor)!Earnings_Code,V.Local.sString)
+		F.Intrinsic.String.Concat(V.Local.sString,"$!$*!**!**!*---------------*!*---------------*!*----------------",V.Local.sString)
+		F.Intrinsic.String.Concat(V.Local.sString,"$!$*!*Weekly Job Totals*!**!*",V.uGlobal.uTimatTot(v.Local.iFor)!Hours_HH,"$!$",V.Local.sString)
+		F.Intrinsic.String.Concat(V.Local.sFIleData,V.Local.sString,V.Local.sFIleData)
+	F.Intrinsic.Control.Next(V.Local.iFor)
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.If(V.Local.fHolHrs,<>,0)
+	F.Intrinsic.String.Concat("$!$",V.Screen.SS_Form1!dtpEnd.Value,"*!**!*HLDY",V.Local.sString)
+	F.Intrinsic.String.Concat(V.Local.sString,"$!$*!**!**!*---------------*!*---------------*!*----------------",V.Local.sString)
+	F.Intrinsic.String.Concat(V.Local.sString,"$!$*!*Weekly Job Totals*!**!*",V.Local.fHolHrs,"$!$",V.Local.sString)
+	F.Intrinsic.String.Concat(V.Local.sFIleData,V.Local.sString,V.Local.sFIleData)
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.String.Concat(V.Local.sFIleData,"$!$*!**!**!*'===========*!*'==========*!*'==========$!$",V.Local.sFIleData)
+F.Intrinsic.String.Concat(V.Local.sFIleData,"*!**!*Grand Total*!*",V.Local.fWkRegHrs,"*!*",V.Local.fWkOTHrs,"*!*",V.Local.fWkDtHrs,"$!$",V.Local.sFIleData)
+F.Intrinsic.String.Concat(V.Local.sFIleData,"*!**!**!*'===========*!*'==========*!*'==========$!$$!$",V.Local.sFIleData)
+
+F.Intrinsic.Control.CallSub(Printreport,"Data",V.Local.sFIleData)
+
+Program.Sub.BuildData.End
+
+Program.Sub.Comments.Start
+${$0$}$GCG_Weekly_Payroll_Report.$}$JCT$}$8/23/2012
+${$3$}$0$}$$}$-1$}$-1$}$$}$1/1/1900$}$Quote 3889
+for Advanced Industries, Inc.
+Custom Hook/menu item
+Program.Sub.Comments.End
+Program.Sub.ScreenSS.Start
+SS_Form1{{CAPTION::Weekly Payroll Report
+SS_Form1.CTRL{{NAME::dtpBeg\\TYPE::6\\CAPTION::Beginning Date\\TABSTOP::1\\GROUP::1\\BROWSER::0\\SIZE::1
+SS_Form1.CTRL{{NAME::dtpEnd\\TYPE::6\\CAPTION::Ending Date\\TABSTOP::2\\GROUP::1\\BROWSER::0\\SIZE::1
+SS_Form1.CTRL{{NAME::cmdOk\\TYPE::5\\CAPTION::Ok\\TABSTOP::3\\GROUP::2\\BROWSER::0\\SIZE::1
+
+Program.Sub.ScreenSS.End
+
